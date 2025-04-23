@@ -225,7 +225,7 @@ Este projeto é distribuído sob a licença MIT. Veja o arquivo `LICENSE` para m
 
 Para suporte ou dúvidas, entre em contato através de:
 
-- Email: suporte@oraculodedados.com
-- GitHub: [github.com/oraculodedados](https://github.com/oraculodedados)
+- Email: gabriel@grupophdtecnologia.com.br
+- GitHub: [github.com/GabrielRibeiroBatista/oraculo-de-dados](https://github.com/GabrielRibeiroBatista/oraculo-de-dados)
 
 ---
