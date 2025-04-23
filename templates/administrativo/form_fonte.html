@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Formulário de Fonte - Oráculo de Dados{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">{{ titulo }}</h1>
+        <a href="{% url 'administrativo:lista_fontes' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+    </div>
+    
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Dados da Fonte</h6>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="{{ form.nome.id_for_label }}" class="form-label">Nome</label>
+                    {{ form.nome }}
+                    {% if form.nome.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.nome.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ form.url.id_for_label }}" class="form-label">URL</label>
+                    {{ form.url }}
+                    {% if form.url.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.url.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ form.tipo.id_for_label }}" class="form-label">Tipo</label>
+                    {{ form.tipo }}
+                    {% if form.tipo.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.tipo.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3 form-check">
+                    {{ form.ativo }}
+                    <label class="form-check-label" for="{{ form.ativo.id_for_label }}">Ativo</label>
+                    {% if form.ativo.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.ativo.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

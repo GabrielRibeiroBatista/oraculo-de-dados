@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Oráculo de Dados{% endblock %}
+
+{% block login %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4>Oráculo de Dados</h4>
+                    <p class="mb-0">Sistema de Web Scraping e Dashboard</p>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title text-center mb-4">Login</h5>
+                    
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        Usuário ou senha incorretos. Por favor, tente novamente.
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">Usuário</label>
+                            <input type="text" name="username" class="form-control" id="id_username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_password" class="form-label">Senha</label>
+                            <input type="password" name="password" class="form-control" id="id_password" required>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Entrar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

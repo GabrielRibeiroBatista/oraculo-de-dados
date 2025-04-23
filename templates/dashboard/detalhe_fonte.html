@@ -1,0 +1,295 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes da Fonte - {{ fonte.nome }} - Oráculo de Dados{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Fonte: {{ fonte.nome }}</h1>
+        <a href="{% url 'dashboard:dados' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+    </div>
+    
+    <!-- Informações da Fonte -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Informações da Fonte</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Nome:</strong> {{ fonte.nome }}</p>
+                    <p><strong>URL:</strong> <a href="{{ fonte.url }}" target="_blank">{{ fonte.url }}</a></p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Tipo:</strong> {{ fonte.get_tipo_display }}</p>
+                    <p><strong>Data de Cadastro:</strong> {{ fonte.data_cadastro|date:"d/m/Y H:i" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Palavras-chave mais encontradas nesta fonte -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Palavras-chave mais encontradas</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative; height:300px;">
+                        <canvas id="palavrasChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Palavras-chave Populares</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Palavra-chave</th>
+                                    <th>Menções</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for palavra in palavras_chave %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'dashboard:detalhe_palavra_chave' palavra.id %}">
+                                            {{ palavra.string }}
+                                        </a>
+                                    </td>
+                                    <td>{{ palavra.total }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-center">Nenhuma palavra-chave encontrada.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Entradas desta fonte -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Entradas Coletadas</h6>
+            <div class="btn-group">
+                <button type="button" class="btn btn-sm btn-outline-primary" id="btnOrdenarData">
+                    <i class="fas fa-sort-amount-down"></i> Data
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="btnOrdenarTitulo">
+                    <i class="fas fa-sort-alpha-down"></i> Título
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="tabelaDados">
+                    <thead>
+                        <tr>
+                            <th>Título</th>
+                            <th>Palavras-chave</th>
+                            <th>Data de Publicação</th>
+                            <th>Data de Coleta</th>
+                            <th>Link</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entrada in page_obj %}
+                        <tr>
+                            <td>{{ entrada.titulo|truncatechars:50 }}</td>
+                            <td>
+                                {% for palavra in entrada.palavras_chave.all %}
+                                <a href="{% url 'dashboard:detalhe_palavra_chave' palavra.id %}" class="badge bg-info text-decoration-none">
+                                    {{ palavra.string }}
+                                </a>
+                                {% empty %}
+                                <span class="text-muted">Nenhuma</span>
+                                {% endfor %}
+                            </td>
+                            <td data-date="{{ entrada.data_publicacao|date:'Y-m-d H:i:s' }}">
+                                {{ entrada.data_publicacao|date:"d/m/Y H:i"|default:"Não informada" }}
+                            </td>
+                            <td data-date="{{ entrada.data_coleta|date:'Y-m-d H:i:s' }}">
+                                {{ entrada.data_coleta|date:"d/m/Y H:i" }}
+                            </td>
+                            <td>
+                                <a href="{{ entrada.link_relacionado }}" target="_blank" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">Nenhuma entrada coletada encontrada.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Paginação -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Paginação">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">&laquo; Primeira</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo; Primeira</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Anterior</span>
+                    </li>
+                    {% endif %}
+                    
+                    {% for i in page_obj.paginator.page_range %}
+                        {% if page_obj.number == i %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ i }}</span>
+                        </li>
+                        {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Próxima</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Próxima</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Última &raquo;</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Gráfico de palavras-chave
+        var palavrasCtx = document.getElementById('palavrasChart').getContext('2d');
+        var palavrasChart = new Chart(palavrasCtx, {
+            type: 'pie',
+            data: {
+                labels: [
+                    {% for palavra in palavras_chave %}
+                    '{{ palavra.string|escapejs }}',
+                    {% endfor %}
+                ],
+                datasets: [{
+                    data: [
+                        {% for palavra in palavras_chave %}
+                        {{ palavra.total }},
+                        {% endfor %}
+                    ],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.5)',
+                        'rgba(54, 162, 235, 0.5)',
+                        'rgba(255, 206, 86, 0.5)',
+                        'rgba(75, 192, 192, 0.5)',
+                        'rgba(153, 102, 255, 0.5)',
+                        'rgba(255, 159, 64, 0.5)',
+                        'rgba(199, 199, 199, 0.5)',
+                        'rgba(83, 102, 255, 0.5)',
+                        'rgba(40, 159, 64, 0.5)',
+                        'rgba(210, 199, 199, 0.5)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(199, 199, 199, 1)',
+                        'rgba(83, 102, 255, 1)',
+                        'rgba(40, 159, 64, 1)',
+                        'rgba(210, 199, 199, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+        
+        // Configurar ordenação da tabela
+        document.getElementById('btnOrdenarData').addEventListener('click', function() {
+            ordenarTabela('data-date', true);
+        });
+        
+        document.getElementById('btnOrdenarTitulo').addEventListener('click', function() {
+            ordenarTabela(0, false);
+        });
+    });
+    
+    function ordenarTabela(coluna, isData) {
+        const tabela = document.getElementById('tabelaDados');
+        const tbody = tabela.querySelector('tbody');
+        const linhas = Array.from(tbody.querySelectorAll('tr'));
+        
+        // Ordenar as linhas
+        linhas.sort((a, b) => {
+            let valorA, valorB;
+            
+            if (isData) {
+                // Ordenar por data (usando o atributo data-date)
+                valorA = a.querySelector(`td[${coluna}]`)?.getAttribute(coluna) || '';
+                valorB = b.querySelector(`td[${coluna}]`)?.getAttribute(coluna) || '';
+            } else {
+                // Ordenar por texto
+                valorA = a.querySelectorAll('td')[coluna]?.textContent.trim().toLowerCase() || '';
+                valorB = b.querySelectorAll('td')[coluna]?.textContent.trim().toLowerCase() || '';
+            }
+            
+            if (valorA < valorB) return -1;
+            if (valorA > valorB) return 1;
+            return 0;
+        });
+        
+        // Limpar e reconstruir a tabela
+        while (tbody.firstChild) {
+            tbody.removeChild(tbody.firstChild);
+        }
+        
+        linhas.forEach(linha => {
+            tbody.appendChild(linha);
+        });
+    }
+</script>
+{% endblock %}

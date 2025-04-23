@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block title %}Logs e Histórico de Coleta - Oráculo de Dados{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Logs e Histórico de Coleta</h1>
+        <a href="{% url 'administrativo:executar_scraping' %}" class="btn btn-primary">
+            <i class="fas fa-sync"></i> Executar Scraping
+        </a>
+    </div>
+    
+    <!-- Filtros -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Filtros</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="fonte" class="form-label">Fonte</label>
+                    <select name="fonte" id="fonte" class="form-select">
+                        <option value="">Todas as fontes</option>
+                        {% for fonte in fontes %}
+                        <option value="{{ fonte.id }}" {% if fonte_selecionada == fonte.id|stringformat:"i" %}selected{% endif %}>
+                            {{ fonte.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="palavra_chave" class="form-label">Palavra-chave</label>
+                    <select name="palavra_chave" id="palavra_chave" class="form-select">
+                        <option value="">Todas as palavras-chave</option>
+                        {% for palavra in palavras_chave %}
+                        <option value="{{ palavra.id }}" {% if palavra_chave_selecionada == palavra.id|stringformat:"i" %}selected{% endif %}>
+                            {{ palavra.string }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Resultados -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Entradas Coletadas</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>Título</th>
+                            <th>Fonte</th>
+                            <th>Palavras-chave</th>
+                            <th>Data de Publicação</th>
+                            <th>Data de Coleta</th>
+                            <th>Link</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entrada in page_obj %}
+                        <tr>
+                            <td>{{ entrada.titulo|truncatechars:50 }}</td>
+                            <td>{{ entrada.fonte.nome }}</td>
+                            <td>
+                                {% for palavra in entrada.palavras_chave.all %}
+                                <span class="badge bg-info">{{ palavra.string }}</span>
+                                {% empty %}
+                                <span class="text-muted">Nenhuma</span>
+                                {% endfor %}
+                            </td>
+                            <td>{{ entrada.data_publicacao|date:"d/m/Y H:i"|default:"Não informada" }}</td>
+                            <td>{{ entrada.data_coleta|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                <a href="{{ entrada.link_relacionado }}" target="_blank" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">Nenhuma entrada coletada encontrada.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Paginação -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Paginação">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if fonte_selecionada %}&fonte={{ fonte_selecionada }}{% endif %}{% if palavra_chave_selecionada %}&palavra_chave={{ palavra_chave_selecionada }}{% endif %}">&laquo; Primeira</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if fonte_selecionada %}&fonte={{ fonte_selecionada }}{% endif %}{% if palavra_chave_selecionada %}&palavra_chave={{ palavra_chave_selecionada }}{% endif %}">Anterior</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo; Primeira</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Anterior</span>
+                    </li>
+                    {% endif %}
+                    
+                    {% for i in page_obj.paginator.page_range %}
+                        {% if page_obj.number == i %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ i }}</span>
+                        </li>
+                        {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ i }}{% if fonte_selecionada %}&fonte={{ fonte_selecionada }}{% endif %}{% if palavra_chave_selecionada %}&palavra_chave={{ palavra_chave_selecionada }}{% endif %}">{{ i }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if fonte_selecionada %}&fonte={{ fonte_selecionada }}{% endif %}{% if palavra_chave_selecionada %}&palavra_chave={{ palavra_chave_selecionada }}{% endif %}">Próxima</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if fonte_selecionada %}&fonte={{ fonte_selecionada }}{% endif %}{% if palavra_chave_selecionada %}&palavra_chave={{ palavra_chave_selecionada }}{% endif %}">Última &raquo;</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Próxima</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Última &raquo;</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

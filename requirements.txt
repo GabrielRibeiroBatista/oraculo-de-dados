@@ -1,0 +1,6 @@
+Django>=4.2
+requests
+beautifulsoup4
+lxml
+apscheduler
+selenium

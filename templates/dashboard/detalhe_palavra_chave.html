@@ -1,0 +1,285 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes da Palavra-chave - {{ palavra_chave.string }} - Oráculo de Dados{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Palavra-chave: {{ palavra_chave.string }}</h1>
+        <a href="{% url 'dashboard:dados' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+    </div>
+    
+    <!-- Informações da Palavra-chave -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Informações da Palavra-chave</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Palavra-chave:</strong> {{ palavra_chave.string }}</p>
+                    <p><strong>Categoria:</strong> {{ palavra_chave.get_categoria_display }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Prioridade:</strong> {{ palavra_chave.get_prioridade_display }}</p>
+                    <p><strong>Data de Cadastro:</strong> {{ palavra_chave.data_cadastro|date:"d/m/Y H:i" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Fontes mais frequentes para esta palavra-chave -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Distribuição por Fonte</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative; height:300px;">
+                        <canvas id="fontesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Fontes Principais</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Fonte</th>
+                                    <th>Menções</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for fonte in fontes %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'dashboard:detalhe_fonte' fonte.id %}">
+                                            {{ fonte.nome }}
+                                        </a>
+                                    </td>
+                                    <td>{{ fonte.total }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-center">Nenhuma fonte encontrada.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Entradas com esta palavra-chave -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Entradas Coletadas</h6>
+            <div class="btn-group">
+                <button type="button" class="btn btn-sm btn-outline-primary" id="btnOrdenarData">
+                    <i class="fas fa-sort-amount-down"></i> Data
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="btnOrdenarFonte">
+                    <i class="fas fa-sort-alpha-down"></i> Fonte
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="btnOrdenarTitulo">
+                    <i class="fas fa-sort-alpha-down"></i> Título
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="tabelaDados">
+                    <thead>
+                        <tr>
+                            <th>Título</th>
+                            <th>Fonte</th>
+                            <th>Data de Publicação</th>
+                            <th>Data de Coleta</th>
+                            <th>Link</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entrada in page_obj %}
+                        <tr>
+                            <td>{{ entrada.titulo|truncatechars:50 }}</td>
+                            <td>
+                                <a href="{% url 'dashboard:detalhe_fonte' entrada.fonte.id %}">
+                                    {{ entrada.fonte.nome }}
+                                </a>
+                            </td>
+                            <td data-date="{{ entrada.data_publicacao|date:'Y-m-d H:i:s' }}">
+                                {{ entrada.data_publicacao|date:"d/m/Y H:i"|default:"Não informada" }}
+                            </td>
+                            <td data-date="{{ entrada.data_coleta|date:'Y-m-d H:i:s' }}">
+                                {{ entrada.data_coleta|date:"d/m/Y H:i" }}
+                            </td>
+                            <td>
+                                <a href="{{ entrada.link_relacionado }}" target="_blank" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">Nenhuma entrada coletada encontrada.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Paginação -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Paginação">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">&laquo; Primeira</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo; Primeira</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Anterior</span>
+                    </li>
+                    {% endif %}
+                    
+                    {% for i in page_obj.paginator.page_range %}
+                        {% if page_obj.number == i %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ i }}</span>
+                        </li>
+                        {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Próxima</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Próxima</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Última &raquo;</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Gráfico de fontes
+        var fontesCtx = document.getElementById('fontesChart').getContext('2d');
+        var fontesChart = new Chart(fontesCtx, {
+            type: 'bar',
+            data: {
+                labels: [
+                    {% for fonte in fontes %}
+                    '{{ fonte.nome|escapejs }}',
+                    {% endfor %}
+                ],
+                datasets: [{
+                    label: 'Menções por Fonte',
+                    data: [
+                        {% for fonte in fontes %}
+                        {{ fonte.total }},
+                        {% endfor %}
+                    ],
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Configurar ordenação da tabela
+        document.getElementById('btnOrdenarData').addEventListener('click', function() {
+            ordenarTabela('data-date', true);
+        });
+        
+        document.getElementById('btnOrdenarFonte').addEventListener('click', function() {
+            ordenarTabela(1, false);
+        });
+        
+        document.getElementById('btnOrdenarTitulo').addEventListener('click', function() {
+            ordenarTabela(0, false);
+        });
+    });
+    
+    function ordenarTabela(coluna, isData) {
+        const tabela = document.getElementById('tabelaDados');
+        const tbody = tabela.querySelector('tbody');
+        const linhas = Array.from(tbody.querySelectorAll('tr'));
+        
+        // Ordenar as linhas
+        linhas.sort((a, b) => {
+            let valorA, valorB;
+            
+            if (isData) {
+                // Ordenar por data (usando o atributo data-date)
+                valorA = a.querySelector(`td[${coluna}]`)?.getAttribute(coluna) || '';
+                valorB = b.querySelector(`td[${coluna}]`)?.getAttribute(coluna) || '';
+            } else {
+                // Ordenar por texto
+                valorA = a.querySelectorAll('td')[coluna]?.textContent.trim().toLowerCase() || '';
+                valorB = b.querySelectorAll('td')[coluna]?.textContent.trim().toLowerCase() || '';
+            }
+            
+            if (valorA < valorB) return -1;
+            if (valorA > valorB) return 1;
+            return 0;
+        });
+        
+        // Limpar e reconstruir a tabela
+        while (tbody.firstChild) {
+            tbody.removeChild(tbody.firstChild);
+        }
+        
+        linhas.forEach(linha => {
+            tbody.appendChild(linha);
+        });
+    }
+</script>
+{% endblock %}

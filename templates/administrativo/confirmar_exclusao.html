@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirmar Exclusão - Oráculo de Dados{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Confirmar Exclusão</h1>
+        <a href="javascript:history.back()" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+    </div>
+    
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-danger">Atenção!</h6>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-danger">
+                <p>Você está prestes a excluir a seguinte {{ tipo }}:</p>
+                <p class="fw-bold">{{ objeto }}</p>
+                <p>Esta ação não pode ser desfeita. Deseja continuar?</p>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="javascript:history.back()" class="btn btn-secondary me-md-2">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Confirmar Exclusão
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

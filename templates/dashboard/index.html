@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Oráculo de Dados{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h2 mb-4">Dashboard</h1>
+    
+    <!-- Cards de resumo -->
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Fontes Monitoradas</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_fontes }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-globe fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Palavras-chave</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_palavras }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-key fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Entradas Coletadas</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_entradas }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-database fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos e tabelas -->
+    <div class="row">
+        <!-- Gráfico de tendência -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Tendência de Coletas (Últimos 7 dias)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative; height:300px;">
+                        <canvas id="tendenciaChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Palavras-chave mais mencionadas -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Palavras-chave Populares</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Palavra-chave</th>
+                                    <th>Menções</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for palavra in palavras_populares %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'dashboard:detalhe_palavra_chave' palavra.id %}">
+                                            {{ palavra.string }}
+                                        </a>
+                                    </td>
+                                    <td>{{ palavra.total_entradas }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-center">Nenhuma palavra-chave encontrada.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Fontes mais produtivas -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Fontes Mais Produtivas</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative; height:300px;">
+                        <canvas id="fontesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Entradas recentes -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Entradas Recentes</h6>
+                    <a href="{% url 'dashboard:dados' %}" class="btn btn-sm btn-primary">Ver Todos</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Título</th>
+                                    <th>Fonte</th>
+                                    <th>Data</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for entrada in entradas_recentes %}
+                                <tr>
+                                    <td>{{ entrada.titulo|truncatechars:50 }}</td>
+                                    <td>
+                                        <a href="{% url 'dashboard:detalhe_fonte' entrada.fonte.id %}">
+                                            {{ entrada.fonte.nome }}
+                                        </a>
+                                    </td>
+                                    <td>{{ entrada.data_coleta|date:"d/m/Y H:i" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">Nenhuma entrada coletada ainda.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Gráfico de tendência
+        var tendenciaCtx = document.getElementById('tendenciaChart').getContext('2d');
+        var dadosTendencia = {{ dados_tendencia|safe }};
+        
+        var tendenciaChart = new Chart(tendenciaCtx, {
+            type: 'line',
+            data: {
+                labels: dadosTendencia.map(item => item.data),
+                datasets: [{
+                    label: 'Entradas Coletadas',
+                    data: dadosTendencia.map(item => item.contagem),
+                    backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                    borderColor: 'rgba(78, 115, 223, 1)',
+                    pointBackgroundColor: 'rgba(78, 115, 223, 1)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(78, 115, 223, 1)',
+                    borderWidth: 2,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+
+        // Gráfico de fontes
+        var fontesCtx = document.getElementById('fontesChart').getContext('2d');
+        var fontesChart = new Chart(fontesCtx, {
+            type: 'bar',
+            data: {
+                labels: [
+                    {% for fonte in fontes_produtivas %}
+                    '{{ fonte.nome|escapejs }}',
+                    {% endfor %}
+                ],
+                datasets: [{
+                    label: 'Entradas Coletadas',
+                    data: [
+                        {% for fonte in fontes_produtivas %}
+                        {{ fonte.total_entradas }},
+                        {% endfor %}
+                    ],
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
