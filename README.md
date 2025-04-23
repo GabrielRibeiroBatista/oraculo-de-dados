@@ -229,5 +229,3 @@ Para suporte ou dúvidas, entre em contato através de:
 - GitHub: [github.com/oraculodedados](https://github.com/oraculodedados)
 
 ---
-
-Desenvolvido com ❤️ para facilitar a coleta e análise de dados da web.
